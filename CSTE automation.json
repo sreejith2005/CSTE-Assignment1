@@ -1,0 +1,482 @@
+{
+  "name": "CSTE intern",
+  "nodes": [
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "7c629699-9dd6-4a75-9b76-d796875f9ac9",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.message.text }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "0e56bc7f-c754-4f5e-9ddd-7124e1f5d998",
+                    "operator": {
+                      "type": "object",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "leftValue": "={{ $json.message.voice }}",
+                    "rightValue": ""
+                  }
+                ]
+              },
+              "renameOutput": true,
+              "outputKey": "Voice"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6d82b344-9b48-4d54-a81f-28e956f77b69",
+      "name": "Text or Voice",
+      "type": "n8n-nodes-base.switch",
+      "position": [
+        -512,
+        2976
+      ],
+      "typeVersion": 3.2
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.voice.file_id }}"
+      },
+      "id": "b4f55a04-7b25-4342-9267-f93674236c34",
+      "name": "Get Voice Message",
+      "type": "n8n-nodes-base.telegram",
+      "position": [
+        -304,
+        3072
+      ],
+      "webhookId": "b77489ac-fd9d-4ed6-94eb-f646d292bfb2",
+      "typeVersion": 1.2,
+      "credentials": {
+        "telegramApi": {
+          "id": "kOiotUZNjnxx28Gk",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a5bcf087-7580-4904-88d3-ca29614fc923",
+              "name": "text",
+              "type": "string",
+              "value": "={{ $json.message.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "49873db6-99e6-4082-9279-de6e81da9e79",
+      "name": "Prepare Text Message for AI Agent",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        -80,
+        2864
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "operation": "transcribe",
+        "options": {}
+      },
+      "id": "1a59f9bb-7dbc-446d-a1fa-ae7931deca73",
+      "name": "Transcribe Voice Message",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "position": [
+        -80,
+        3072
+      ],
+      "typeVersion": 1.8,
+      "credentials": {
+        "openAiApi": {
+          "id": "eWMV8BJDgZIHAmU8",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "id": "69fabaf6-1d33-433f-af9b-f3f45033e861",
+      "name": "Telegram Trigger1",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "position": [
+        -736,
+        2976
+      ],
+      "webhookId": "6596b191-7b90-41ed-ad04-b84340d8d3d6",
+      "typeVersion": 1.1,
+      "credentials": {
+        "telegramApi": {
+          "id": "kOiotUZNjnxx28Gk",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.reddit.com/search.json?q={{$json[\"query\"]}}&limit=5",
+        "jsonParameters": true,
+        "options": {},
+        "headerParametersJson": "={\"User-Agent\": \"n8n-workflow-bot/1.0\"}"
+      },
+      "id": "a5319580-e324-42ea-9622-a10d80d1776e",
+      "name": "Reddit Search1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        208,
+        2624
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "url": "https://api.twitter.com/2/tweets/search/recent?query={{encodeURIComponent($json[\"query\"] || 'openai')}}&max_results=5",
+        "jsonParameters": true,
+        "options": {}
+      },
+      "id": "3a24c909-1c1a-4032-955a-5c261218ebf8",
+      "name": "Twitter Search1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        208,
+        2816
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "HCuQMloMhFSBo06l",
+          "name": "Unnamed credential 5"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "return [\n  ...($input.all()[0].json.data?.children || []).map(i => ({\n    json: {\n      platform: 'Reddit',\n      title: i.data.title,\n      url: 'https://reddit.com' + i.data.permalink,\n      engagement: i.data.num_comments\n    }\n  })),\n  ...($input.all()[1].json.data || []).map(i => ({\n    json: {\n      platform: 'Twitter',\n      title: i.text,\n      url: `https://twitter.com/i/web/status/${i.id}`,\n      engagement: i.public_metrics?.retweet_count || 0\n    }\n  }))\n];"
+      },
+      "id": "bb343202-eb29-4561-be14-88192a1c0860",
+      "name": "Merge Results3",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        432,
+        2624
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1BeJRmSOUh6R8LF-usKh1TBMn5GDWvK0gJQIP0UpYH5o",
+          "mode": "list",
+          "cachedResultName": "Topic Research Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BeJRmSOUh6R8LF-usKh1TBMn5GDWvK0gJQIP0UpYH5o/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BeJRmSOUh6R8LF-usKh1TBMn5GDWvK0gJQIP0UpYH5o/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "2286739c-9710-4b39-906c-6346a0d7a293",
+      "name": "Google Sheets Append1",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 3,
+      "position": [
+        656,
+        2624
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hPo441Dp8KoxwQVh",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://www.reddit.com/search.json?q={{$json[\"query\"]}}&limit=5",
+        "jsonParameters": true,
+        "options": {},
+        "headerParametersJson": "={\"User-Agent\": \"n8n-workflow-bot/1.0\"}"
+      },
+      "id": "b1a44668-f167-4061-b2ae-7acd8f942cab",
+      "name": "Reddit Search2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        192,
+        3200
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "url": "https://api.twitter.com/2/tweets/search/recent?query={{encodeURIComponent($json[\"query\"] || 'openai')}}&max_results=5",
+        "jsonParameters": true,
+        "options": {}
+      },
+      "id": "9a8d2581-6514-4d27-a3ab-29d6a74a898f",
+      "name": "Twitter Search2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        192,
+        3392
+      ],
+      "credentials": {
+        "oAuth2Api": {
+          "id": "ZGlvNO1QrxMl02EY",
+          "name": "Unnamed credential 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "return [\n  ...($input.all()[0].json.data?.children || []).map(i => ({\n    json: {\n      platform: 'Reddit',\n      title: i.data.title,\n      url: 'https://reddit.com' + i.data.permalink,\n      engagement: i.data.num_comments\n    }\n  })),\n  ...($input.all()[1].json.data || []).map(i => ({\n    json: {\n      platform: 'Twitter',\n      title: i.text,\n      url: `https://twitter.com/i/web/status/${i.id}`,\n      engagement: i.public_metrics?.retweet_count || 0\n    }\n  }))\n];"
+      },
+      "id": "3740b160-579d-4de6-8c86-3baef1a9dff2",
+      "name": "Merge Results4",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        416,
+        3200
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1BeJRmSOUh6R8LF-usKh1TBMn5GDWvK0gJQIP0UpYH5o",
+          "mode": "list",
+          "cachedResultName": "Topic Research Log",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BeJRmSOUh6R8LF-usKh1TBMn5GDWvK0gJQIP0UpYH5o/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1BeJRmSOUh6R8LF-usKh1TBMn5GDWvK0gJQIP0UpYH5o/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "c94d841a-2da9-4d92-af20-aa07386e649b",
+      "name": "Google Sheets Append2",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 3,
+      "position": [
+        640,
+        3200
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hPo441Dp8KoxwQVh",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Text or Voice": {
+      "main": [
+        [
+          {
+            "node": "Prepare Text Message for AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Voice Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Voice Message": {
+      "main": [
+        [
+          {
+            "node": "Transcribe Voice Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Text Message for AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Reddit Search1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Twitter Search1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcribe Voice Message": {
+      "main": [
+        [
+          {
+            "node": "Reddit Search2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Twitter Search2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Text or Voice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reddit Search1": {
+      "main": [
+        [
+          {
+            "node": "Merge Results3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twitter Search1": {
+      "main": [
+        [
+          {
+            "node": "Merge Results3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Results3": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets Append1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reddit Search2": {
+      "main": [
+        [
+          {
+            "node": "Merge Results4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Twitter Search2": {
+      "main": [
+        [
+          {
+            "node": "Merge Results4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Results4": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets Append2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "58a3da33-ea24-45f7-ae92-cdca9d31b7fc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "19a755552b4017df53ea69eec75c5ec0c5a5b2eb6371de87f5d0f91a1c095b50"
+  },
+  "id": "WRh1FCGnqzIi8Ynp",
+  "tags": []
+}
