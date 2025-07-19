@@ -9,6 +9,8 @@ This repository contains two n8n workflows for the internship assignment:
 - **Processing**: API calls to Reddit/Twitter/YouTube, filtering, AI analysis (Gemini).
 - **Output**: Logs all results (including errors) to Google Sheets.
 
+<img width="1823" height="776" alt="image" src="https://github.com/user-attachments/assets/ae6f6e28-f0c2-4ca9-84a9-95fa00f6c210" />
+
 ## Setup Instructions
 1. Import JSON files into n8n (Workflow > Import from File).
 2. Configure API keys in n8n credentials:
@@ -18,5 +20,3 @@ This repository contains two n8n workflows for the internship assignment:
    - Google Sheets credentials
 3. Replace placeholders (e.g., YOUR_API_KEY) in JSON.
 4. Execute and test.
-
-
